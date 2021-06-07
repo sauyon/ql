@@ -582,8 +582,8 @@ module Private {
   module External {
     /** Holds if `spec` is a relevant external specification. */
     private predicate relevantSpec(string spec) {
-      summaryElement(_, spec, _, _) or
-      summaryElement(_, _, spec, _) or
+      summaryElement(_, spec, _, _, _) or
+      summaryElement(_, _, spec, _, _) or
       sourceElement(_, spec, _) or
       sinkElement(_, spec, _)
     }
@@ -630,7 +630,7 @@ module Private {
       )
     }
 
-    private SummaryComponent interpretComponent(string c) {
+    SummaryComponent interpretComponent(string c) {
       specSplit(_, c, _) and
       (
         exists(int pos | parseArg(c, pos) and result = SummaryComponent::argument(pos))
@@ -673,14 +673,15 @@ module Private {
       override predicate required(SummaryComponent c) { interpretSpec(_, _, c, this) }
     }
 
-    private class SummarizedCallableExternal extends SummarizedCallable {
-      SummarizedCallableExternal() { summaryElement(this, _, _, _) }
+    class SummarizedCallableExternal extends SummarizedCallable {
+      SummarizedCallableExternal() { summaryElement(this, _, _, _, _) }
 
-      override predicate propagatesFlow(
-        SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue
+      predicate propagatesFlowForRow(
+        SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue,
+        string row
       ) {
         exists(string inSpec, string outSpec, string kind |
-          summaryElement(this, inSpec, outSpec, kind) and
+          summaryElement(this, inSpec, outSpec, kind, row) and
           interpretSpec(inSpec, 0, input) and
           interpretSpec(outSpec, 0, output)
         |
@@ -688,6 +689,12 @@ module Private {
           or
           kind = "taint" and preservesValue = false
         )
+      }
+
+      override predicate propagatesFlow(
+        SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue
+      ) {
+        propagatesFlowForRow(input, output, preservesValue, _)
       }
     }
 

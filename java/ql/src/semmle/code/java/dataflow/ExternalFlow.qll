@@ -84,6 +84,9 @@ private module Frameworks {
   private import semmle.code.java.frameworks.JaxWS
   private import semmle.code.java.frameworks.spring.SpringHttp
   private import semmle.code.java.frameworks.spring.SpringWebClient
+  private import semmle.code.java.frameworks.spring.SpringCache
+  private import semmle.code.java.frameworks.spring.SpringDataRepository
+  private import semmle.code.java.frameworks.spring.SpringUi
   private import semmle.code.java.security.ResponseSplitting
   private import semmle.code.java.security.InformationLeak
   private import semmle.code.java.security.XSS
@@ -410,27 +413,25 @@ predicate sinkModel(
 /** Holds if a summary model exists for the given parameters. */
 predicate summaryModel(
   string namespace, string type, boolean subtypes, string name, string signature, string ext,
-  string input, string output, string kind
+  string input, string output, string kind, string row
 ) {
-  exists(string row |
-    summaryModel(row) and
-    row.splitAt(";", 0) = namespace and
-    row.splitAt(";", 1) = type and
-    row.splitAt(";", 2) = subtypes.toString() and
-    subtypes = [true, false] and
-    row.splitAt(";", 3) = name and
-    row.splitAt(";", 4) = signature and
-    row.splitAt(";", 5) = ext and
-    row.splitAt(";", 6) = input and
-    row.splitAt(";", 7) = output and
-    row.splitAt(";", 8) = kind
-  )
+  summaryModel(row) and
+  row.splitAt(";", 0) = namespace and
+  row.splitAt(";", 1) = type and
+  row.splitAt(";", 2) = subtypes.toString() and
+  subtypes = [true, false] and
+  row.splitAt(";", 3) = name and
+  row.splitAt(";", 4) = signature and
+  row.splitAt(";", 5) = ext and
+  row.splitAt(";", 6) = input and
+  row.splitAt(";", 7) = output and
+  row.splitAt(";", 8) = kind
 }
 
 private predicate relevantPackage(string package) {
   sourceModel(package, _, _, _, _, _, _, _) or
   sinkModel(package, _, _, _, _, _, _, _) or
-  summaryModel(package, _, _, _, _, _, _, _, _)
+  summaryModel(package, _, _, _, _, _, _, _, _, _)
 }
 
 private predicate packageLink(string shortpkg, string longpkg) {
@@ -476,7 +477,7 @@ predicate modelCoverage(string package, int pkgs, string kind, string part, int 
       strictcount(string subpkg, string type, boolean subtypes, string name, string signature,
         string ext, string input, string output |
         canonicalPkgLink(package, subpkg) and
-        summaryModel(subpkg, type, subtypes, name, signature, ext, input, output, kind)
+        summaryModel(subpkg, type, subtypes, name, signature, ext, input, output, kind, _)
       )
   )
 }
@@ -490,7 +491,7 @@ module CsvValidation {
       or
       sinkModel(namespace, type, _, name, signature, ext, _, _) and pred = "sink"
       or
-      summaryModel(namespace, type, _, name, signature, ext, _, _, _) and pred = "summary"
+      summaryModel(namespace, type, _, name, signature, ext, _, _, _, _) and pred = "summary"
     |
       not namespace.regexpMatch("[a-zA-Z0-9_\\.]+") and
       msg = "Dubious namespace \"" + namespace + "\" in " + pred + " model."
@@ -511,7 +512,7 @@ module CsvValidation {
     exists(string pred, string input, string part |
       sinkModel(_, _, _, _, _, _, input, _) and pred = "sink"
       or
-      summaryModel(_, _, _, _, _, _, input, _, _) and pred = "summary"
+      summaryModel(_, _, _, _, _, _, input, _, _, _) and pred = "summary"
     |
       (
         invalidSpecComponent(input, part) and
@@ -528,7 +529,7 @@ module CsvValidation {
     exists(string pred, string output, string part |
       sourceModel(_, _, _, _, _, _, output, _) and pred = "source"
       or
-      summaryModel(_, _, _, _, _, _, _, output, _) and pred = "summary"
+      summaryModel(_, _, _, _, _, _, _, output, _, _) and pred = "summary"
     |
       invalidSpecComponent(output, part) and
       not part = "" and
@@ -565,7 +566,7 @@ private predicate elementSpec(
 ) {
   sourceModel(namespace, type, subtypes, name, signature, ext, _, _) or
   sinkModel(namespace, type, subtypes, name, signature, ext, _, _) or
-  summaryModel(namespace, type, subtypes, name, signature, ext, _, _, _)
+  summaryModel(namespace, type, subtypes, name, signature, ext, _, _, _, _)
 }
 
 bindingset[namespace, type, subtypes]

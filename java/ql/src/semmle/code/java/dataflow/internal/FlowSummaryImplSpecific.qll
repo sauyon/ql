@@ -58,14 +58,14 @@ DataFlowType getCallbackParameterType(DataFlowType t, int i) { none() }
 DataFlowType getCallbackReturnType(DataFlowType t, ReturnKind rk) { none() }
 
 /**
- * Holds if an external flow summary exists for `c` with input specification
+ * Holds if an external flow summary `row` exists for `c` with input specification
  * `input`, output specification `output`, and kind `kind`.
  */
-predicate summaryElement(DataFlowCallable c, string input, string output, string kind) {
+predicate summaryElement(DataFlowCallable c, string input, string output, string kind, string row) {
   exists(
     string namespace, string type, boolean subtypes, string name, string signature, string ext
   |
-    summaryModel(namespace, type, subtypes, name, signature, ext, input, output, kind) and
+    summaryModel(namespace, type, subtypes, name, signature, ext, input, output, kind, row) and
     c = interpretElement(namespace, type, subtypes, name, signature, ext)
   )
 }
