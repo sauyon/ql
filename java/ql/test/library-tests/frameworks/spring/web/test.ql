@@ -1,7 +1,12 @@
+/**
+ * @kind path-problem
+ */
+
 import java
 import semmle.code.java.dataflow.DataFlow
 import semmle.code.java.dataflow.TaintTracking
 import TestUtilities.InlineExpectationsTest
+import DataFlow::PartialPathGraph
 
 class ValueFlowConf extends DataFlow::Configuration {
   ValueFlowConf() { this = "qltest:valueFlowConf" }
@@ -13,6 +18,10 @@ class ValueFlowConf extends DataFlow::Configuration {
   override predicate isSink(DataFlow::Node n) {
     n.asExpr().(Argument).getCall().getCallee().hasName("sink")
   }
+
+  override int fieldFlowBranchLimit() { result = 50 }
+
+  override int explorationLimit() { result = 100 }
 }
 
 class TaintFlowConf extends TaintTracking::Configuration {
@@ -25,6 +34,8 @@ class TaintFlowConf extends TaintTracking::Configuration {
   override predicate isSink(DataFlow::Node n) {
     n.asExpr().(Argument).getCall().getCallee().hasName("sink")
   }
+
+  override int fieldFlowBranchLimit() { result = 30 }
 }
 
 class HasFlowTest extends InlineExpectationsTest {
@@ -50,3 +61,8 @@ class HasFlowTest extends InlineExpectationsTest {
     )
   }
 }
+
+from ValueFlowConf conf, DataFlow::PartialPathNode source, DataFlow::PartialPathNode sink
+where not edges(sink, _) and conf.hasPartialFlow(source, sink, _) and source.getNode().hasLocationInfo(_, 36, _, _, _)
+  // and conf.isSink(sink.getNode())
+select source, source, sink, concat(sink.getNode().getAQlClass(), ", ")

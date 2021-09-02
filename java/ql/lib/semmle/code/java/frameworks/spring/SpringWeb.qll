@@ -3,6 +3,7 @@
  */
 
 import java
+private import semmle.code.java.dataflow.ExternalFlow
 
 /** An interface for web requests in the Spring framework. */
 class SpringWebRequest extends Class {

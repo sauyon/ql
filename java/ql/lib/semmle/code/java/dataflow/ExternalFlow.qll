@@ -406,7 +406,7 @@ private predicate sinkModel(string row) {
   any(SinkModelCsv s).row(row)
 }
 
-private predicate summaryModel(string row) {
+predicate summaryModel(string row) {
   summaryModelCsv(row) or
   any(SummaryModelCsv s).row(row)
 }
